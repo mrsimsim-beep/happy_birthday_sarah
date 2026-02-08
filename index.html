@@ -254,9 +254,9 @@
                         opacity: 0.95
                     },
                     shawarma: {
-                        color: { r: 149, g: 110, b: 53 },
+                        color: { r: 79, g: 51, b: 36 },
                         secondaryColor: { r: 160, g: 120, b: 90 },
-                        viscosity: 0.5,
+                        viscosity: 0.8,
                         gravity: 0.6,
                         spread: 1.0,
                         shine: 0.3,
@@ -632,15 +632,15 @@
             liquidSystem = new LiquidSplash(canvas);
             liquidSystem.animate();
             
-            setTimeout(() => createFoodSplash('garlic', 3), 300);
-            setTimeout(() => createFoodSplash('pomegranate', 3), 800);
-            setTimeout(() => createFoodSplash('shawarma', 3), 1300);
+            setTimeout(() => createFoodSplash('garlic', 10), 300);
+            setTimeout(() => createFoodSplash('pomegranate', 10), 800);
+            setTimeout(() => createFoodSplash('shawarma', 10), 1300);
             
             setInterval(() => {
                 const types = ['garlic', 'pomegranate', 'shawarma'];
                 const randomType = types[Math.floor(Math.random() * types.length)];
-                createFoodSplash(randomType, 1);
-            }, 2500);
+                createFoodSplash(randomType, 3);
+            }, 500);
             
             setTimeout(() => {
                 document.getElementById('restartBtn').style.display = 'block';
