@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Martin Birthday Countdown</title>
+    <link rel="preload" as="image" href="https://ici.radio-canada.ca/audio-video/lib/img/extraits/HR/2021-01-23_19_00_00_ENDIRECT_0294_01_01.jpeg">
+    <link rel="preload" as="image" href="https://les-as-de-l-info.s3.amazonaws.com/images/1684892780-1684874665-MartinDeschamps_2019-1813_HR_featured_image_single_960_540.jpg">
     <style>
         * {
             margin: 0;
@@ -11,15 +13,15 @@
             box-sizing: border-box;
         }
         
-        body {
+        html, body {
             background: #000;
             color: #fff;
             font-family: 'Impact', 'Arial Black', sans-serif;
-            height: 100vh;
+            height: 100%;
+            width: 100%;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed;
+            touch-action: none;
         }
         
         #countdown {
@@ -29,21 +31,29 @@
                 0 0 40px #ff0000,
                 0 0 80px #ff6600;
             animation: pulse 0.5s ease-in-out;
-            position: absolute;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 10;
+            line-height: 1;
+            text-align: center;
+            width: 100%;
         }
         
         @keyframes pulse {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         
         .image-stage {
             display: none;
-            position: absolute;
-            width: 100vw;
-            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             align-items: center;
             justify-content: center;
@@ -53,14 +63,21 @@
             width: 100vw;
             height: 100vh;
             object-fit: cover;
+            object-position: center center;
             transform-origin: center center;
+            -webkit-transform-origin: center center;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            will-change: transform;
         }
         
         #birthdayStage {
             display: none;
-            position: absolute;
-            width: 100vw;
-            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             background: radial-gradient(circle, #2a1a1a 0%, #000 100%);
         }
@@ -81,6 +98,7 @@
             animation: birthdayPulse 2s ease-in-out infinite;
             line-height: 1.2;
             pointer-events: none;
+            white-space: nowrap;
         }
         
         @keyframes birthdayPulse {
@@ -122,10 +140,17 @@
             text-transform: uppercase;
             z-index: 200;
             box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            -webkit-tap-highlight-color: transparent;
         }
         
-        #restartBtn:hover {
+        #restartBtn:hover, #restartBtn:active {
             transform: translateX(-50%) scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            #birthdayText {
+                font-size: 12vw;
+            }
         }
     </style>
 </head>
@@ -133,17 +158,17 @@
     <div id="countdown">5</div>
     
     <div id="stage1" class="image-stage">
-        <img id="img1" class="zoom-image" src="https://ici.radio-canada.ca/audio-video/lib/img/extraits/HR/2021-01-23_19_00_00_ENDIRECT_0294_01_01.jpeg" alt="Martin 1">
+        <img id="img1" class="zoom-image" src="https://ici.radio-canada.ca/audio-video/lib/img/extraits/HR/2021-01-23_19_00_00_ENDIRECT_0294_01_01.jpeg" alt="Martin 1" decoding="async">
     </div>
     
     <div id="stage2" class="image-stage">
-        <img id="img2" class="zoom-image" src="https://les-as-de-l-info.s3.amazonaws.com/images/1684892780-1684874665-MartinDeschamps_2019-1813_HR_featured_image_single_960_540.jpg" alt="Martin 2">
+        <img id="img2" class="zoom-image" src="https://les-as-de-l-info.s3.amazonaws.com/images/1684892780-1684874665-MartinDeschamps_2019-1813_HR_featured_image_single_960_540.jpg" alt="Martin 2" decoding="async">
     </div>
     
     <div id="birthdayStage">
         <canvas id="splashCanvas"></canvas>
         <div id="birthdayText">
-            BONNE FÊTE PIZZA
+            BONNE FÊTE CONNASSE
             <span class="name-input"> </span>
         </div>
     </div>
@@ -151,37 +176,27 @@
     <button id="restartBtn" onclick="location.reload()">↻ Watch Again</button>
 
     <script>
-        // ============================================
-        // CONFIGURABLE ZOOM SETTINGS
-        // ============================================
-        
         const ZOOM_CONFIG = {
-    image1: {
-        startScale: 1,
-        endScale: 2.3,
-        duration: 1000,
-        direction: 'in',
-        easing: 'ease-in-out',
-        // Use viewport percentages instead of image percentages
-        // These will land at the same physical spot on any screen
-        focusX: 0,  // 30% from left of viewport (0-100)
-        focusY: 90   // 70% from top of viewport (0-100)
-    },
-    
-    image2: {
-        startScale: 1,
-        endScale: 2.5,
-        duration: 1000,
-        direction: 'in',
-        easing: 'ease-in-out',
-        focusX: 100,  // 70% from left
-        focusY: 100   // 80% from top
-    }
-};
-        
-        // ============================================
-        // CANVAS LIQUID SPLASH SYSTEM
-        // ============================================
+            image1: {
+                startScale: 1,
+                endScale: 2.3,
+                duration: 1000,
+                direction: 'in',
+                easing: 'ease-in-out',
+                focusX: 30,
+                focusY: 70
+            },
+            
+            image2: {
+                startScale: 1,
+                endScale: 2.5,
+                duration: 1000,
+                direction: 'in',
+                easing: 'ease-in-out',
+                focusX: 70,
+                focusY: 80
+            }
+        };
         
         class LiquidSplash {
             constructor(canvas) {
@@ -203,20 +218,15 @@
                 this.canvas.height = this.height;
             }
             
-            // Create a splash burst at x, y
             createSplash(x, y, type, intensity = 1) {
                 const config = this.getSplashConfig(type);
-                
-                // Create main splash blob
                 this.splashes.push(new SplashBlob(x, y, config, intensity));
                 
-                // Create particles
                 const particleCount = Math.floor(30 * intensity);
                 for (let i = 0; i < particleCount; i++) {
                     this.particles.push(new LiquidParticle(x, y, config, intensity));
                 }
                 
-                // Create small droplets
                 const dropletCount = Math.floor(20 * intensity);
                 for (let i = 0; i < dropletCount; i++) {
                     this.droplets.push(new Droplet(x, y, config, intensity));
@@ -226,7 +236,7 @@
             getSplashConfig(type) {
                 const configs = {
                     garlic: {
-                        color: { r: 255, g: 248, b: 220 }, // Creamy white
+                        color: { r: 255, g: 248, b: 220 },
                         secondaryColor: { r: 255, g: 255, b: 240 },
                         viscosity: 0.7,
                         gravity: 0.4,
@@ -235,7 +245,7 @@
                         opacity: 0.9
                     },
                     pomegranate: {
-                        color: { r: 10, g: 0, b: 10 }, // Deep red
+                        color: { r: 10, g: 0, b: 10 },
                         secondaryColor: { r: 40, g: 0, b: 20 },
                         viscosity: 0.9,
                         gravity: 0.5,
@@ -244,7 +254,7 @@
                         opacity: 0.95
                     },
                     shawarma: {
-                        color: {  r: 149, g: 110, b: 53 }, // Meat brown
+                        color: { r: 149, g: 110, b: 53 },
                         secondaryColor: { r: 160, g: 120, b: 90 },
                         viscosity: 0.5,
                         gravity: 0.6,
@@ -257,19 +267,16 @@
             }
             
             update() {
-                // Update splash blobs
                 this.splashes = this.splashes.filter(splash => {
                     splash.update();
                     return splash.life > 0;
                 });
                 
-                // Update particles
                 this.particles = this.particles.filter(p => {
                     p.update();
                     return p.life > 0 && p.y < this.height + 100;
                 });
                 
-                // Update droplets
                 this.droplets = this.droplets.filter(d => {
                     d.update();
                     return d.life > 0 && d.y < this.height + 50;
@@ -278,14 +285,8 @@
             
             draw() {
                 this.ctx.clearRect(0, 0, this.width, this.height);
-                
-                // Draw splash blobs (bottom layer)
                 this.splashes.forEach(splash => splash.draw(this.ctx));
-                
-                // Draw particles (middle layer)
                 this.particles.forEach(p => p.draw(this.ctx));
-                
-                // Draw droplets (top layer)
                 this.droplets.forEach(d => d.draw(this.ctx));
             }
             
@@ -296,7 +297,6 @@
             }
         }
         
-        // Splash Blob - The main splat shape
         class SplashBlob {
             constructor(x, y, config, intensity) {
                 this.x = x;
@@ -305,7 +305,6 @@
                 this.life = 1.0;
                 this.decay = 0.015;
                 
-                // Create irregular blob shape
                 this.points = [];
                 const radius = (80 + Math.random() * 60) * intensity;
                 const points = 12;
@@ -320,7 +319,6 @@
                     });
                 }
                 
-                // Physics
                 this.vx = (Math.random() - 0.5) * 4;
                 this.vy = (Math.random() - 0.5) * 4 - 2;
                 this.scale = 0.1;
@@ -332,10 +330,9 @@
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.1; // slight gravity
+                this.vy += 0.1;
                 this.rotation += this.rotationSpeed;
                 
-                // Scale up quickly then hold
                 if (this.scale < this.targetScale) {
                     this.scale += (this.targetScale - this.scale) * 0.2;
                 }
@@ -351,7 +348,6 @@
                 ctx.rotate(this.rotation);
                 ctx.scale(this.scale, this.scale);
                 
-                // Create gradient for 3D effect
                 const gradient = ctx.createRadialGradient(-20, -20, 0, 0, 0, 100);
                 const c = this.config.color;
                 const s = this.config.secondaryColor;
@@ -362,7 +358,6 @@
                 
                 ctx.fillStyle = gradient;
                 
-                // Draw irregular blob
                 ctx.beginPath();
                 this.points.forEach((p, i) => {
                     const x = p.x * (0.9 + Math.sin(Date.now() * 0.003 + i) * 0.1);
@@ -379,7 +374,6 @@
                 ctx.closePath();
                 ctx.fill();
                 
-                // Add shine highlight
                 if (this.config.shine > 0) {
                     ctx.fillStyle = `rgba(255, 255, 255, ${this.life * this.config.shine * 0.3})`;
                     ctx.beginPath();
@@ -391,7 +385,6 @@
             }
         }
         
-        // Liquid Particle - Flying drops with trails
         class LiquidParticle {
             constructor(x, y, config, intensity) {
                 this.x = x;
@@ -400,7 +393,6 @@
                 this.life = 1.0;
                 this.decay = 0.01 + Math.random() * 0.01;
                 
-                // Physics
                 const angle = Math.random() * Math.PI * 2;
                 const speed = (5 + Math.random() * 15) * intensity * config.spread;
                 this.vx = Math.cos(angle) * speed;
@@ -412,16 +404,14 @@
             }
             
             update() {
-                // Store history for trails
                 this.history.push({ x: this.x, y: this.y });
                 if (this.history.length > 5) this.history.shift();
                 
                 this.x += this.vx;
                 this.y += this.vy;
                 this.vy += this.config.gravity;
-                this.vx *= 0.99; // air resistance
+                this.vx *= 0.99;
                 
-                // Stretch based on velocity
                 const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
                 this.stretch = 1 + speed * 0.05;
                 
@@ -437,7 +427,6 @@
                 const c = this.config.color;
                 const alpha = this.life * this.config.opacity;
                 
-                // Draw trail
                 if (this.history.length > 1) {
                     ctx.strokeStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha * 0.5})`;
                     ctx.lineWidth = this.size * 0.5;
@@ -450,12 +439,10 @@
                     ctx.stroke();
                 }
                 
-                // Draw main drop
                 ctx.translate(this.x, this.y);
                 ctx.rotate(Math.atan2(this.vy, this.vx));
                 ctx.scale(this.stretch, 1 / this.stretch);
                 
-                // Gradient for 3D drop look
                 const grad = ctx.createRadialGradient(-this.size/3, -this.size/3, 0, 0, 0, this.size);
                 grad.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.8})`);
                 grad.addColorStop(0.3, `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`);
@@ -466,7 +453,6 @@
                 ctx.arc(0, 0, this.size, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Highlight
                 ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
                 ctx.beginPath();
                 ctx.arc(-this.size * 0.3, -this.size * 0.3, this.size * 0.2, 0, Math.PI * 2);
@@ -476,7 +462,6 @@
             }
         }
         
-        // Droplet - Small trailing drops
         class Droplet {
             constructor(x, y, config, intensity) {
                 this.x = x;
@@ -511,17 +496,12 @@
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Small highlight
                 ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
                 ctx.beginPath();
                 ctx.arc(this.x - this.size * 0.3, this.y - this.size * 0.3, this.size * 0.2, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
-        
-        // ============================================
-        // MAIN SEQUENCE
-        // ============================================
         
         let liquidSystem;
         let count = 5;
@@ -548,72 +528,98 @@
         }, 1000);
         
         function showImageWithZoom(stageId, imgId, config, callback) {
-    const stage = document.getElementById(stageId);
-    const img = document.getElementById(imgId);
-    
-    stage.style.display = 'flex';
-    
-    // Get viewport and image dimensions
-    const viewportW = window.innerWidth;
-    const viewportH = window.innerHeight;
-    const imgRect = img.getBoundingClientRect();
-    const imgW = imgRect.width;
-    const imgH = imgRect.height;
-    
-    // Calculate where the focus point is on the image
-    // focusX/Y are viewport percentages (0-100)
-    const targetX = (config.focusX / 100) * viewportW;
-    const targetY = (config.focusY / 100) * viewportH;
-    
-    // Convert to percentage within the image
-    // This accounts for object-fit: cover behavior
-    const originX = (targetX / imgW) * 100;
-    const originY = (targetY / imgH) * 100;
-    
-    img.style.transformOrigin = `${originX}% ${originY}%`;
-    
-    let currentScale = config.startScale;
-    img.style.transform = `scale(${currentScale})`;
-    
-    const startTime = performance.now();
-    const scaleDiff = config.endScale - config.startScale;
-    
-    function animate(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / config.duration, 1);
-        
-        let easedProgress;
-        switch(config.easing) {
-            case 'linear':
-                easedProgress = progress;
-                break;
-            case 'ease-in':
-                easedProgress = progress * progress;
-                break;
-            case 'ease-out':
-                easedProgress = 1 - Math.pow(1 - progress, 2);
-                break;
-            case 'ease-in-out':
-                easedProgress = progress < 0.5 
-                    ? 2 * progress * progress 
-                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-                break;
-            default:
-                easedProgress = progress;
+            const stage = document.getElementById(stageId);
+            const img = document.getElementById(imgId);
+            
+            stage.style.display = 'flex';
+            
+            const setupZoom = () => {
+                const viewportW = window.innerWidth;
+                const viewportH = window.innerHeight;
+                
+                const imgNaturalW = img.naturalWidth;
+                const imgNaturalH = img.naturalHeight;
+                const imgAspect = imgNaturalW / imgNaturalH;
+                const viewportAspect = viewportW / viewportH;
+                
+                let renderedImgW, renderedImgH;
+                
+                if (imgAspect > viewportAspect) {
+                    renderedImgH = viewportH;
+                    renderedImgW = viewportH * imgAspect;
+                } else {
+                    renderedImgW = viewportW;
+                    renderedImgH = viewportW / imgAspect;
+                }
+                
+                const offsetX = (renderedImgW - viewportW) / 2;
+                const offsetY = (renderedImgH - viewportH) / 2;
+                
+                const targetX = (config.focusX / 100) * viewportW;
+                const targetY = (config.focusY / 100) * viewportH;
+                
+                const originX = ((targetX + offsetX) / renderedImgW) * 100;
+                const originY = ((targetY + offsetY) / renderedImgH) * 100;
+                
+                img.style.transformOrigin = `${originX}% ${originY}%`;
+                
+                animateZoom(config, img, stage, callback);
+            };
+            
+            if (img.complete && img.naturalWidth > 0) {
+                requestAnimationFrame(setupZoom);
+            } else {
+                img.onload = () => requestAnimationFrame(setupZoom);
+                img.onerror = () => {
+                    console.error('Image failed to load');
+                    if (callback) callback();
+                };
+            }
         }
         
-        currentScale = config.startScale + (scaleDiff * easedProgress);
-        img.style.transform = `scale(${currentScale})`;
-        
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            setTimeout(() => {
-                stage.style.display = 'none';
-                if (callback) callback();
-            }, 200);
-        }
-    }
+        function animateZoom(config, img, stage, callback) {
+            let currentScale = config.startScale;
+            img.style.transform = `scale(${currentScale})`;
+            
+            const startTime = performance.now();
+            const scaleDiff = config.endScale - config.startScale;
+            
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / config.duration, 1);
+                
+                let easedProgress;
+                switch(config.easing) {
+                    case 'linear':
+                        easedProgress = progress;
+                        break;
+                    case 'ease-in':
+                        easedProgress = progress * progress;
+                        break;
+                    case 'ease-out':
+                        easedProgress = 1 - Math.pow(1 - progress, 2);
+                        break;
+                    case 'ease-in-out':
+                        easedProgress = progress < 0.5 
+                            ? 2 * progress * progress 
+                            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                        break;
+                    default:
+                        easedProgress = progress;
+                }
+                
+                currentScale = config.startScale + (scaleDiff * easedProgress);
+                img.style.transform = `scale(${currentScale})`;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    setTimeout(() => {
+                        stage.style.display = 'none';
+                        if (callback) callback();
+                    }, 200);
+                }
+            }
             
             requestAnimationFrame(animate);
         }
@@ -622,17 +628,14 @@
             const stage = document.getElementById('birthdayStage');
             stage.style.display = 'block';
             
-            // Initialize liquid system
             const canvas = document.getElementById('splashCanvas');
             liquidSystem = new LiquidSplash(canvas);
             liquidSystem.animate();
             
-            // Create splashes with delays
             setTimeout(() => createFoodSplash('garlic', 3), 300);
             setTimeout(() => createFoodSplash('pomegranate', 3), 800);
             setTimeout(() => createFoodSplash('shawarma', 3), 1300);
             
-            // Continue creating random splashes
             setInterval(() => {
                 const types = ['garlic', 'pomegranate', 'shawarma'];
                 const randomType = types[Math.floor(Math.random() * types.length)];
@@ -643,7 +646,6 @@
                 document.getElementById('restartBtn').style.display = 'block';
             }, 3000);
             
-            // Handle resize
             window.addEventListener('resize', () => liquidSystem.resize());
         }
         
@@ -652,7 +654,6 @@
             const height = window.innerHeight;
             
             for (let i = 0; i < count; i++) {
-                // Random position, avoiding center text area
                 let x, y;
                 const centerX = width / 2;
                 const centerY = height / 2;
@@ -661,7 +662,6 @@
                     x = Math.random() * width;
                     y = Math.random() * height;
                 } while (
-                    // Keep away from center text
                     Math.abs(x - centerX) < 200 && Math.abs(y - centerY) < 100
                 );
                 
@@ -671,5 +671,4 @@
         }
     </script>
 </body>
-
 </html>
